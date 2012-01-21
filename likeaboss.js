@@ -27,17 +27,29 @@
  */
 
 var likeABoss = {
-	l: {
+	strings: {
+		// Tags
 		'h1': 'First level heading',
 		'h2': 'Second level heading',
 		'h3': 'Third level heading',
+		'h4': 'Fourth level heading',
+		'h5': 'Fifth level heading',
+		'h6': 'Sixth level heading',
 		
 		'bold': 'Bold text',
 		'italic': 'Italic text',
 		
+		'bullet_list': 'Bulleted list',
+		'number_list': 'Numbered list',
+		
 		'link': 'Link',
+		'image': 'Image',
 		
 		'code': 'Code block',
+		
+		// Other
+		'link_text': 'Link text',
+		'url': 'URL',
 	},
 	
 	tag: {
@@ -71,25 +83,73 @@ var likeABoss = {
 			close: ''
 		},
 		
+		//
+		
 		'bold': {
-			open: '*',
-			close: '*'
+			open: '**',
+			close: '**'
 		},
 		
 		'italic': {
-			open: '__',
-			close: '__'
+			open: '_',
+			close: '_'
 		},
+		
+		//
+		
+		'bullet_list': {
+			open: '- ',
+			close: ''
+		},
+		
+		'number_list': {
+			open: '1. ',
+			close: ''
+		},
+		
+		//
 		
 		'link': {
 			open: '[',
-			close: '](http://)'
+			middle: '](',
+			close: ')',
+			func: function(tag, selection) {
+				var text = prompt(likeABoss.locale('link_text'), selection);
+				if (!text || text == null) {
+					return;
+				}
+				
+				var url = prompt(likeABoss.locale('url'), selection ? selection : 'http://');
+				if (!url || url == null) {
+					return;
+				}
+				
+				return tag.open + text + tag.middle + url + tag.close;
+			}
+		},
+		
+		//
+		
+		'image': {
+			open: '![An Image](',
+			close: ')',
+			func: function(tag, selection) {
+				if (!selection || selection == null) {
+					var url = prompt(likeABoss.locale('url'));
+					if (!url || url == null) {
+						return;
+					}
+				}
+				
+				var val = url ? url : selection;
+				return tag.open + val + tag.close;
+			}
 		},
 		
 		'code': {
 			open: "\n    ",
-			close: ""
-		}
+			close: ''
+		},
 	},
 	
 	markup: function(type) {
@@ -97,7 +157,7 @@ var likeABoss = {
 	},
 	
 	locale: function(name) {
-		return likeABoss.l[name];
+		return likeABoss.strings[name];
 	}
 };
 
@@ -114,7 +174,7 @@ var likeABoss = {
 			
 			function mkbtn(name) {
 				button = $('<a href="#" class="likeaboss_' + name + '" title="' + likeABoss.locale(name) + '">' + name + '</a>');
-				button.click(function(type){ markup(name); });
+				button.click(function(){ markup(name); return false; });
 				return button;
 			}
 			
@@ -150,13 +210,19 @@ var likeABoss = {
 				caretPosition = getCaretPosition();
 				selection = getSelection();
 				
-				var block = likeABoss.tag[type].open + selection + likeABoss.tag[type].close;
+				var block;
+				if (likeABoss.tag[type].func) {
+					block = likeABoss.tag[type].func(likeABoss.tag[type], selection);
+				} else {
+					block = likeABoss.tag[type].open + selection + likeABoss.tag[type].close;
+				}
+				
+				if (!block || block == '' || block == null) {
+					return false;
+				}
 				
 				textarea.value = textarea.value.substr(0, caretPosition) + block + textarea.value.substring(caretPosition + selection.length, textarea.value.length)
-				
 				setCaretPosition(caretPosition + block.length);
-				
-				return false;
 			}
 			
 			$$.wrap('<div class="likeaboss_container"></div>');
@@ -166,11 +232,16 @@ var likeABoss = {
 			toolbar.append(mkbtn('h1'));
 			toolbar.append(mkbtn('h2'));
 			toolbar.append(mkbtn('h3'));
+			toolbar.append(mkbtn('h4'));
 			
 			toolbar.append(mkbtn('bold'));
 			toolbar.append(mkbtn('italic'));
 			
+			toolbar.append(mkbtn('bullet_list'));
+			toolbar.append(mkbtn('number_list'));
+			
 			toolbar.append(mkbtn('link'));
+			toolbar.append(mkbtn('image'));
 			
 			toolbar.append(mkbtn('code'));
 			
