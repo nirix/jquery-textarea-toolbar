@@ -63,8 +63,31 @@ var likeABoss = {
 		'bold': {open: '**', close: '**'},
 		'italic': {open: '_', close: '_'},
 		//
-		'bullet_list': {open: '- '},
-		'number_list': {open: '1. '},
+		'bullet_list': {open: '- ',
+			func: function(tag, selection) {
+				if (selection.indexOf('\n') != -1) {
+					selection = selection.replace(/\n/g, '\n' + tag.open);
+				}
+				
+				return tag.open + selection;
+			}
+		},
+		'number_list': {open: '1. ',
+			func: function(tag, selection) {
+				if (selection.indexOf('\n') != -1) {
+					var list = selection.split('\n');
+					selection = '';
+					
+					for (var i = 1; i <= list.length; ++i) {
+						selection += i + '. ' + list[i-1] + (i < list.length ? '\n' : '');
+					}
+					
+					return selection;
+				}	
+							
+				return tag.open + selection;
+			}
+		},
 		//
 		'link': {open: '[', middle: '](', close: ')',
 			func: function(tag, selection) {
