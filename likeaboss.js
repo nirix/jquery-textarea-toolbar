@@ -118,7 +118,15 @@ var likeABoss = {
 				return tag.open + val + tag.close;
 			}
 		},
-		'code': {open: "\n    "},
+		'code': {open: '    ',
+			func: function(tag, selection) {
+				if (selection.indexOf('\n') != -1) {
+					selection = selection.replace(/\n/g, '\n' + tag.open);
+				}
+				
+				return tag.open + selection;
+			}
+		},
 	},
 	
 	/**
